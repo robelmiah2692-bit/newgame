@@ -207,7 +207,21 @@
 	<script src="code2.js" crossorigin="anonymous"></script>
 	<script src="data.js" crossorigin="anonymous"></script>
 
+<script>
+        // ফ্লটার অ্যাপ থেকে ডায়মন্ড আপডেট পাওয়ার ফাংশন
+        window.userDiamonds = 0;
+        function syncDiamondsFromApp(amount) {
+            window.userDiamonds = amount;
+            console.log("Updated Diamonds from App: " + amount);
+        }
 
+        // গেম রেজাল্ট অ্যাপে পাঠানোর ফাংশন
+        function sendGameResult(result) {
+            if (window.flutter_inappwebview) {
+                window.flutter_inappwebview.callHandler('gameResult', result);
+            }
+        }
+    </script>
 </head>
 <body>
 
@@ -227,7 +241,10 @@
         //Load all assets and start the game
         game.loadAllAssets(function() {
             game.startGameLoop();
-        });
+        if (window.flutter_inappwebview) {
+                   window.flutter_inappwebview.callHandler('requestDiamonds');
+                }
+		});
     })();
 
 	</script>
