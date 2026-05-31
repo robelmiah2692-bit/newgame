@@ -22,11 +22,9 @@
             margin-right: auto;
             overflow: hidden;
         }
-
-        
 	</style>
-    <!-- Libs and GDJS core files : -->
-		<script src="libs/jshashtable.js" crossorigin="anonymous"></script>
+    
+    <script src="libs/jshashtable.js" crossorigin="anonymous"></script>
 	<script src="logger.js" crossorigin="anonymous"></script>
 	<script src="gd.js" crossorigin="anonymous"></script>
 	<script src="libs/rbush.js" crossorigin="anonymous"></script>
@@ -207,46 +205,53 @@
 	<script src="code2.js" crossorigin="anonymous"></script>
 	<script src="data.js" crossorigin="anonymous"></script>
 
-<script>
-        // ফ্লটার অ্যাপ থেকে ডায়মন্ড আপডেট পাওয়ার ফাংশন
-        window.userDiamonds = 0;
+    <script>
+        // ফ্লটার অ্যাপ থেকে ডাটা গ্রহণ করে গেমের UI আপডেট করার ফাংশন
         function syncDiamondsFromApp(amount) {
-            window.userDiamonds = amount;
             console.log("Updated Diamonds from App: " + amount);
+            
+            // GDevelop এর গেমে ব্যালেন্স আপডেট করা
+            if (typeof gdjs !== 'undefined' && gdjs.RuntimeGame.getGame()) {
+                var game = gdjs.RuntimeGame.getGame();
+                game.getVariables().get("UserDiamonds").setNumber(amount);
+                
+                // স্ক্রিনে থাকা DiamondsDisplay টেক্সট অবজেক্টটি আপডেট করা
+                var runtimeScene = game.getSceneStack().getCurrentScene();
+                if (runtimeScene) {
+                    var textObject = runtimeScene.getObjects("DiamondsDisplay")[0];
+                    if (textObject) {
+                        textObject.setString(amount.toString());
+                    }
+                }
+            }
         }
 
-        // গেম রেজাল্ট অ্যাপে পাঠানোর ফাংশন
-        function sendGameResult(result) {
+        // গেম থেকে অ্যাপে রিকোয়েস্ট পাঠানোর ফাংশন
+        function requestAppAction(actionType, amount) {
             if (window.flutter_inappwebview) {
-                window.flutter_inappwebview.callHandler('gameResult', result);
+                window.flutter_inappwebview.callHandler('gameAction', {
+                    type: actionType,
+                    value: amount
+                });
             }
         }
     </script>
 </head>
 <body>
-
-    
 	<script>
-
     (function() {
-        //Initialization
         var game = new gdjs.RuntimeGame(gdjs.projectData, {});
-
-        //Create a renderer
         game.getRenderer().createStandardCanvas(document.body);
-
-        //Bind keyboards/mouse/touch events
         game.getRenderer().bindStandardEvents(game.getInputManager(), window, document);
-
-        //Load all assets and start the game
+        
         game.loadAllAssets(function() {
             game.startGameLoop();
-        if (window.flutter_inappwebview) {
-                   window.flutter_inappwebview.callHandler('requestDiamonds');
-                }
-		});
+            // গেম চালু হওয়ার সাথে সাথে অ্যাপ থেকে ব্যালেন্স রিকোয়েস্ট করা
+            if (window.flutter_inappwebview) {
+                window.flutter_inappwebview.callHandler('requestDiamonds');
+            }
+        });
     })();
-
 	</script>
 </body>
 </html>
